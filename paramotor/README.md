@@ -35,13 +35,18 @@ Browser tests use locally installed Google Chrome. Screenshots are written to th
 | Space (hold) | Full throttle demand; engine spools up smoothly |
 | Space (release) | Return to idle and glide |
 | A / F | Shift weight left / right in the seat |
+| Z / X | Pull left / right A-riser to induce a collapse; both for a frontal collapse |
 | P / Escape | Pause or resume |
 | H | Flight guide |
 | C | Switch between two rear chase distances |
 | M | Mute / unmute |
 | R | Restart airborne |
 
-Brake travel takes time. Use short holds and release to feel the response. Holding a brake continuously eventually reaches deep travel and can stall that side. Throttle changes the climb much more than airspeed. Pulse Space to maintain height. The chase camera keeps the horizon nearly level while showing the suspended pilot and moving wing.
+Brake travel takes time and continues past 100% without an input cap. Short holds produce ordinary steering; sustained overbraking can stall one or both sides. Timed alternating inputs can build wingovers, with possible unloading and collapse. Throttle changes climb much more than airspeed.
+
+Choose **14–32 m² wing area** with the slider on the welcome screen or in Settings. At fixed 115 kg all-up mass, size changes wing loading, speed, sink, response, brake travel and visible canopy/line dimensions. Changing size in flight starts a new flight. The selection persists locally.
+
+On touch devices, two circular pads control independent brakes. Hold to pull progressively, drag down to adjust, drag sideways to lean, and release to raise that hand. Hold the central THRUST button for engine power. A-RISERS switches the circles to collapse inputs; HANDS UP releases touch inputs. The mobile HUD is reduced and the chase camera leaves room for the controls.
 
 ## Included
 
@@ -58,7 +63,7 @@ Brake travel takes time. Use short holds and release to feel the response. Holdi
 
 The handling was researched against manufacturer flight manuals and engine specifications. Read [the research and flight-model notes](docs/FLIGHT_MODEL.md) for sources, equations, calibration and limitations.
 
-This is an original reduced-order simulator, **not a validated digital twin or a training device**. It does not simulate fabric/line structural dynamics, full six-degree-of-freedom aerodynamics, launch inflation, riser techniques, a reserve, or reliable real-world collapse/acrobatic behavior. The valley is synthetic, not a surveyed location. Realism here means consistent forces, plausible performance and recognizable control consequences, with those limits stated explicitly.
+This is an original reduced-order simulator, **not a validated digital twin or a training device**. Stalls, riser-induced collapses, surges and wingovers are approximated. Fabric/line structural dynamics, full six-degree-of-freedom aerodynamics, launch inflation, cravats and reserve deployment are absent. No real-pilot or measured flight-data validation has been performed. The valley is synthetic.
 
 ## Code map
 
@@ -68,7 +73,7 @@ This is an original reduced-order simulator, **not a validated digital twin or a
 | `src/math.js`, `src/terrain.js` | Shared terrain height, seeded noise and terrain mesh |
 | `src/aircraft.js` | Deformable canopy, rigging and animated pilot/motor |
 | `src/environment.js` | Landscape, sky, vegetation, airfield and obstacle index |
-| `src/controls.js` | Keyboard input and focus handling |
+| `src/controls.js`, `src/touch-controls.js` | Keyboard, multitouch input and focus handling |
 | `src/audio.js` | Locally synthesized engine, wind and variometer |
 | `src/ui.js`, `src/style.css` | Menus, instruments, map and responsive interface |
 | `src/main.js` | Fixed-step loop, camera, renderer and application state |

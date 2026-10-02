@@ -1,6 +1,7 @@
 export class Controls {
-  constructor(onAction) {
+  constructor(onAction, touch = null) {
     this.keys = new Set();
+    this.touch = touch;
     this.onAction = onAction;
     const flightKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyA', 'KeyF'];
     window.addEventListener('keydown', e => {
@@ -13,10 +14,12 @@ export class Controls {
     window.addEventListener('keyup', e => { this.keys.delete(e.code); if (flightKeys.includes(e.code)) e.preventDefault(); });
     window.addEventListener('blur', () => { this.clear(); this.onAction('Blur'); });
   }
-  clear() { this.keys.clear(); }
+  clear() { this.keys.clear(); this.touch?.clear(); }
   sample() {
-    const k = this.keys;
-    return { left: k.has('ArrowLeft') ? 1 : 0, right: k.has('ArrowRight') ? 1 : 0, both: k.has('ArrowDown') ? 1 : 0,
-      release: k.has('ArrowUp'), throttle: k.has('Space') ? 1 : 0, weight: (k.has('KeyF') ? 1 : 0) - (k.has('KeyA') ? 1 : 0) };
+    const k = this.keys, t = this.touch?.sample() ?? {};
+    return { ...t, leftPull: k.has('ArrowLeft') || t.leftPull, rightPull: k.has('ArrowRight') || t.rightPull, bothPull: k.has('ArrowDown'),
+      release: k.has('ArrowUp'), leftRiser: k.has('KeyZ') ? 1 : t.leftRiser, rightRiser: k.has('KeyX') ? 1 : t.rightRiser,
+      throttle: k.has('Space') ? 1 : t.throttle ?? 0,
+      weight: Math.max(-1, Math.min(1, (k.has('KeyF') ? 1 : 0) - (k.has('KeyA') ? 1 : 0) + (t.weight ?? 0))) };
   }
 }

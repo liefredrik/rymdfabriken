@@ -1,4 +1,4 @@
-import { WEATHER } from './physics.js';
+import { WEATHER, wingSpec, WING_RANGE } from './physics.js';
 import { terrainHeight, LAKE_LEVEL } from './math.js';
 const compass = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 const formatTime = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
@@ -8,7 +8,7 @@ export class UI {
     document.querySelector('#app').innerHTML = `
       <header class="topbar"><a class="brand" href="#" aria-label="AER home"><svg viewBox="0 0 50 28"><path d="M2 16Q25-8 48 16L43 20Q25 2 7 20Z" fill="currentColor"/><path d="m8 20 17 7 17-7" fill="none" stroke="currentColor" stroke-width="1"/></svg><span>AER<span class="brand-sub">PARAMOTOR SIMULATOR</span></span></a>
         <div class="session"><span class="live-dot"></span><span id="session-label">THE VALLEY</span><span class="divider"></span><span id="flight-time">00:00</span></div>
-        <div class="top-actions"><button id="sound" class="icon-button" aria-label="Toggle sound" title="Sound · M">♫</button><button id="help-button" class="icon-button" aria-label="Flight guide" title="Flight guide · H">?</button><button id="settings-button" class="text-button">SETTINGS <span>☷</span></button></div>
+        <div class="top-actions"><button id="pause-button" class="icon-button mobile-only" aria-label="Pause flight">Ⅱ</button><button id="sound" class="icon-button" aria-label="Toggle sound" title="Sound · M">♫</button><button id="help-button" class="icon-button" aria-label="Flight guide" title="Flight guide · H">?</button><button id="settings-button" class="text-button">SETTINGS <span>☷</span></button></div>
       </header>
       <div id="compass" class="compass flight-only"><div class="compass-ticks">╵ &nbsp; ╵ &nbsp; ╵ &nbsp; ╵ &nbsp; ╵ &nbsp; ╵ &nbsp; ╵</div><span id="heading">000° N</span><i></i></div>
       <div class="location"><span class="location-line"></span> VAL D’AER <span>46° N &nbsp; / &nbsp; ALPINE FREE FLIGHT</span></div>
@@ -16,8 +16,8 @@ export class UI {
         <div class="eyebrow"><span></span> A LITTLE CLOSER TO THE SKY</div>
         <h1>Find your<br>own altitude<span>.</span></h1>
         <p>A wing, an engine, and an open valley.<br>Feel the air. Follow your own line.</p>
-        <div class="launch-actions"><button id="start" class="primary">Enter flight <span>↗</span></button><button id="ground-start" class="secondary">Start on the field <span>→</span></button></div>
-        <div class="flight-spec"><span>26 m² WING</span><b>·</b><span>185 cc ENGINE</span><b>·</b><span>115 kg ALL-UP</span></div>
+        ${this.wingSlider("welcome-wing", 26)}<div class="launch-actions"><button id="start" class="primary">Enter flight <span>↗</span></button><button id="ground-start" class="secondary">Start on the field <span>→</span></button></div>
+        <div class="flight-spec"><span id="wing-spec">26 m² WING</span><b>·</b><span>185 cc ENGINE</span><b>·</b><span>115 kg ALL-UP</span></div>
       </section>
       <aside id="welcome-controls" class="welcome-controls"><div class="eyebrow">YOUR HANDS ON THE WING <span class="small-index">01 — 03</span></div>
         <div class="control-row"><div class="key-group"><kbd>←</kbd><kbd>→</kbd></div><div>Pull a brake<small>Hold progressively to turn</small></div></div>
@@ -37,15 +37,42 @@ export class UI {
       <div class="flight-only flight-footer"><span><kbd>P</kbd> Pause <kbd>H</kbd> Guide <kbd>C</kbd> Camera <kbd>R</kbd> Restart</span><span id="weather-label">VALLEY BREEZE</span></div>
       <div id="notice" class="notice" role="status"></div>
       <div id="flight-tip" class="flight-tip flight-only">Hold <kbd>SPACE</kbd> to climb. Release to glide. Tap a brake to feel the wing.</div>
+      <section id="touch-controls" class="touch-controls" aria-label="Touch flight controls">
+        <div class="touch-tools"><button id="touch-mode" aria-pressed="false">A-RISERS</button><span>HOLD TO PULL · DRAG TO ADJUST</span><button id="touch-release">HANDS UP</button></div>
+        <div class="touch-pad" data-pad="left" role="button" aria-label="Left brake touch control"><span class="pad-label">LEFT BRAKE</span><span class="pad-thumb"></span><output>0%</output><small>↓ BRAKE · ↔ LEAN</small></div>
+        <button id="touch-throttle" aria-label="Hold for engine thrust"><span>THRUST</span><b id="touch-power">0%</b><small>HOLD</small></button>
+        <div class="touch-pad" data-pad="right" role="button" aria-label="Right brake touch control"><span class="pad-label">RIGHT BRAKE</span><span class="pad-thumb"></span><output>0%</output><small>↓ BRAKE · ↔ LEAN</small></div>
+      </section>
       <dialog id="panel"><div class="dialog-top"><span class="eyebrow" id="panel-eyebrow">FLIGHT DECK</span><button id="close-panel" class="icon-button" aria-label="Close panel">×</button></div><div id="panel-content"></div></dialog>
       <div id="loading" class="loading"><span class="loader"></span> PREPARING THE VALLEY</div>`;
     this.el = {};
     for (const el of document.querySelectorAll('[id]')) this.el[el.id] = el;
     this.el.start.onclick = () => actions.start('air'); this.el['ground-start'].onclick = () => actions.start('ground');
     this.el.sound.onclick = () => actions.sound(); this.el['help-button'].onclick = () => actions.help(); this.el['settings-button'].onclick = () => actions.settings(); this.el['close-panel'].onclick = () => actions.resume();
+    this.el['pause-button'].onclick = () => actions.pause();
     document.querySelector('.brand').onclick = e => { e.preventDefault(); actions.menu(); };
     this.el.panel.addEventListener('cancel', e => { e.preventDefault(); actions.resume(); });
+    this.bindWingSlider("welcome-wing", area => actions.wing(area));
     this.mapCtx = this.el.map.getContext('2d'); this.makeMap(); this.mapTrail = []; this.lastTrail = 0;
+  }
+  wingSlider(id, area) {
+    const spec = wingSpec(area);
+    return `<div class="wing-picker"><label for="${id}">WING AREA <output id="${id}-value">${spec.area} m²</output></label><input type="range" id="${id}" min="${WING_RANGE.min}" max="${WING_RANGE.max}" step="1" value="${spec.area}" aria-describedby="${id}-details"><div class="wing-scale"><span>14 · SPORT</span><span>24</span><span>32 · LARGE</span></div><p id="${id}-details">${spec.loading.toFixed(2)} kg/m² · 115 kg all-up · ${spec.area < 22 ? 'Fast & dynamic' : spec.area > 28 ? 'Slower & more settled' : 'Balanced handling'}</p></div>`;
+  }
+  bindWingSlider(id, onChange = () => {}) {
+    const slider = document.getElementById(id);
+    slider.oninput = () => {
+      const spec = wingSpec(Number(slider.value));
+      document.getElementById(`${id}-value`).textContent = `${spec.area} m²`;
+      document.getElementById(`${id}-details`).textContent = `${spec.loading.toFixed(2)} kg/m² · 115 kg all-up · ${spec.area < 22 ? 'Fast & dynamic' : spec.area > 28 ? 'Slower & more settled' : 'Balanced handling'}`;
+      onChange(spec.area);
+    };
+  }
+  setWing(area) {
+    this.el['welcome-wing'].value = area;
+    this.el['welcome-wing-value'].textContent = `${area} m²`;
+    this.el['welcome-wing-details'].textContent = `${(115 / area).toFixed(2)} kg/m² · 115 kg all-up`;
+    this.el['wing-spec'].textContent = `${area} m² WING`;
   }
   ready() { this.el.loading.classList.add('hidden'); }
   flying(on) { document.body.classList.toggle('in-flight', on); this.close(); if (on) { this.mapTrail = []; this.lastTrail = 0; } }
@@ -53,19 +80,20 @@ export class UI {
   panel(title, content, eyebrow = 'FLIGHT DECK') { this.el['panel-eyebrow'].textContent = eyebrow; this.el['panel-content'].innerHTML = `<h2>${title}</h2>${content}`; if (!this.el.panel.open) this.el.panel.showModal(); }
   help() {
     this.panel('A feel for flight.', `<p class="dialog-intro">Small inputs. Give the wing time to respond.</p><div class="guide-grid">
-      <div><kbd>←</kbd> <kbd>→</kbd><h3>Brake steering</h3><p>Hold to progressively pull the left or right brake. Release the key to raise that hand. Longer pulls produce more bank and drag.</p></div>
+      <div><kbd>←</kbd> <kbd>→</kbd><h3>Brake steering</h3><p>Hold to keep pulling; travel continues past 100% with no input cap. Release to raise that hand. Deep input can stall one side or the entire wing.</p></div>
       <div><kbd>A</kbd> <kbd>F</kbd><h3>Weight shift</h3><p>Lean into a turn before adding brake. Weight shift steers with less drag and can oppose engine torque.</p></div>
       <div><kbd class="wide">SPACE</kbd><h3>Power & altitude</h3><p>Hold for full power with gradual engine spool-up. Release for idle and an unpowered glide. Pulse power to manage height.</p></div>
       <div><kbd>↓</kbd> <kbd>↑</kbd><h3>Flare & release</h3><p>Down pulls both brakes. Up overrides all brake inputs to raise both hands. A brief flare trades airspeed for lift; sustained deep braking can stall.</p></div></div>
-      <div class="guide-note">Landing: approach the marked grass field, release power, and progressively flare just above the ground. Trees, buildings, water and hard impacts end the flight. Ground starts begin with the canopy already inflated; hold Space to run and take off.</div>
+      <div class="guide-note"><strong>Mobile:</strong> hold either circle to pull progressively. Drag down for precise travel; holding below its rim keeps pulling deeper. Drag sideways to lean. Release your finger to release that brake. Hold THRUST for power. A-RISERS switches the circles to collapse inputs; HANDS UP releases all touch inputs.<br><br><strong>Simulator maneuvers:</strong> timed alternating brake and weight inputs can build wingovers; there is no bank-angle stop. Poor timing can unload and fold a tip. Hold Z / X to pull the left / right A-riser; both provoke a frontal collapse. Stall and collapse recoveries cost height. These are approximations, not flight instruction.<br><br>Landing: approach the grass field, release power, and flare just above the ground. Ground starts begin with the wing already inflated.</div>
       <div class="guide-shortcuts"><span><kbd>P</kbd> Pause</span><span><kbd>C</kbd> Chase distance</span><span><kbd>H</kbd> Guide</span><span><kbd>M</kbd> Audio</span><span><kbd>R</kbd> New flight</span></div>
       <p class="fine-print">A researched, reduced-order simulation. Not a validated aircraft model or a substitute for flight instruction.</p>`, 'PILOT’S FIELD NOTES');
   }
-  settings(weather, quality, camera) {
-    this.panel('Make the air your own.', `<p class="dialog-intro">Choose your conditions. The valley is yours to explore.</p><label class="setting-label" for="weather-select">AIR MASS</label><select id="weather-select">${Object.entries(WEATHER).map(([key, w]) => `<option value="${key}" ${weather === key ? 'selected' : ''}>${w.name}</option>`).join('')}</select><p class="setting-help">Still morning: no wind. Valley breeze: light wind and gentle lift. Thermal afternoon: gusts, thermal cores and surrounding sink.</p>
+  settings(weather, quality, camera, area) {
+    this.panel('Make the air your own.', `<p class="dialog-intro">Choose your conditions. The valley is yours to explore.</p>${this.wingSlider("settings-wing", area)}<p class="setting-help">Changing wing size starts a fresh flight with the selected wing.</p><label class="setting-label" for="weather-select">AIR MASS</label><select id="weather-select">${Object.entries(WEATHER).map(([key, w]) => `<option value="${key}" ${weather === key ? 'selected' : ''}>${w.name}</option>`).join('')}</select><p class="setting-help">Still morning: no wind. Valley breeze: light wind and gentle lift. Thermal afternoon: gusts, thermal cores and surrounding sink.</p>
       <label class="setting-label" for="quality-select">RENDER QUALITY</label><select id="quality-select"><option value="high" ${quality === 'high' ? 'selected' : ''}>High — full resolution & shadows</option><option value="balanced" ${quality === 'balanced' ? 'selected' : ''}>Balanced — lighter GPU load</option></select>
       <label class="setting-label" for="camera-select">CHASE CAMERA</label><select id="camera-select"><option value="0" ${camera === 0 ? 'selected' : ''}>Close — feel the wing</option><option value="1" ${camera === 1 ? 'selected' : ''}>Wide — see the valley</option></select><button class="primary dialog-primary" id="apply-settings">Apply & return <span>↗</span></button>`);
-    document.querySelector('#apply-settings').onclick = () => this.actions.apply({ weather: document.querySelector('#weather-select').value, quality: document.querySelector('#quality-select').value, camera: Number(document.querySelector('#camera-select').value) });
+    this.bindWingSlider('settings-wing');
+    document.querySelector('#apply-settings').onclick = () => this.actions.apply({ area: Number(document.querySelector('#settings-wing').value), weather: document.querySelector('#weather-select').value, quality: document.querySelector('#quality-select').value, camera: Number(document.querySelector('#camera-select').value) });
   }
   pause() { this.panel('Take a breath.', '<p class="dialog-intro">Your flight is paused. The sky can wait.</p><button id="resume-flight" class="primary dialog-primary">Continue flight <span>↗</span></button><button id="restart-flight" class="secondary dialog-primary">New flight</button>'); document.querySelector('#resume-flight').onclick = () => this.actions.resume(); document.querySelector('#restart-flight').onclick = () => this.actions.start('air'); }
   finish(s) {
@@ -90,13 +118,15 @@ export class UI {
     e['flight-time'].textContent = formatTime(s.time); e.heading.textContent = `${String(Math.round(heading) % 360).padStart(3, '0')}° ${compass[Math.round(heading / 45) % 8]}`;
     e.airspeed.textContent = Math.round(s.airspeed * 3.6); e.altitude.textContent = Math.round(s.agl); e['altitude-msl'].textContent = `${Math.round(s.y)} m MSL`;
     e.vario.textContent = `${s.verticalSpeed >= 0 ? '+' : '−'}${Math.abs(s.verticalSpeed).toFixed(1)}`; e.vario.style.color = s.verticalSpeed > .2 ? '#ddec8e' : '';
-    e['flight-mode'].textContent = s.status === 'ground' ? 'READY TO LAUNCH' : s.stall > .3 ? 'STALL' : s.throttle > .25 ? 'POWERED FLIGHT' : s.wind.y > .7 ? 'THERMAL LIFT' : 'GLIDING';
+    const maxCollapse = Math.max(s.leftCollapse ?? 0, s.rightCollapse ?? 0);
+    e['flight-mode'].textContent = s.status === 'ground' ? 'READY TO LAUNCH' : maxCollapse > .25 ? 'COLLAPSE' : s.stall > .3 ? 'STALL' : s.throttle > .25 ? 'POWERED FLIGHT' : s.wind.y > .7 ? 'THERMAL LIFT' : 'GLIDING';
     e.throttle.textContent = Math.round(s.throttle * 100); e['throttle-fill'].style.width = `${s.throttle * 100}%`;
-    e['brake-left'].style.height = `${s.leftBrake * 100}%`; e['brake-right'].style.height = `${s.rightBrake * 100}%`;
+    e['brake-left'].style.height = `${Math.min(1, s.leftBrake) * 100}%`; e['brake-right'].style.height = `${Math.min(1, s.rightBrake) * 100}%`;
+    e['brake-left'].style.background = s.leftBrake > .85 ? '#f2ad75' : ''; e['brake-right'].style.background = s.rightBrake > .85 ? '#f2ad75' : '';
     e['weight-dot'].style.left = `${50 + s.weight * 43}%`; e['weight-label'].textContent = s.weight < -.15 ? 'LEAN LEFT' : s.weight > .15 ? 'LEAN RIGHT' : 'CENTERED';
     e.distance.textContent = `${(s.distance / 1000).toFixed(2)} km`; e.load.textContent = `${s.load.toFixed(1)} G`; e.fuel.textContent = `${s.fuel.toFixed(1)} L`;
     e['wind-label'].textContent = `WIND ${Math.hypot(s.wind.x, s.wind.z).toFixed(1)} m/s`; e['weather-label'].textContent = WEATHER[weather].name.toUpperCase();
-    const notice = Math.abs(s.leftStall - s.rightStall) > .5 ? 'ASYMMETRIC STALL · Ease the deep brake' : s.stall > .3 ? 'STALL · Release deep brake input' : Math.abs(s.bank) > .85 ? 'STEEP BANK · Increasing sink and load' : s.agl < 15 && s.status === 'flying' ? (s.verticalSpeed > .5 ? 'LOW ALTITUDE · Keep the wing level' : 'LOW ALTITUDE · Prepare to land') : '';
+    const notice = maxCollapse > .3 ? (Math.min(s.leftCollapse, s.rightCollapse) > .35 ? 'FRONTAL COLLAPSE · Wing pressure lost' : `${s.leftCollapse > s.rightCollapse ? 'LEFT' : 'RIGHT'} COLLAPSE · Asymmetric lift`) : Math.abs(s.leftStall - s.rightStall) > .5 ? 'ASYMMETRIC STALL · Deep brake input' : s.stall > .3 ? 'STALL · Deep brake input' : s.lineTension < .2 && s.status === 'flying' ? 'UNLOADED WING · Collapse risk' : Math.abs(Math.sin(s.bank)) > .75 ? 'STEEP BANK · Increasing sink and load' : s.agl < 15 && s.status === 'flying' ? (s.verticalSpeed > .5 ? 'LOW ALTITUDE · Keep the wing level' : 'LOW ALTITUDE · Prepare to land') : '';
     e.notice.textContent = notice; e.notice.classList.toggle('visible', !!notice);
     e['flight-tip'].classList.toggle('hidden', s.time > 17);
     const tipMode = s.status === 'ground' ? 'ground' : 'air';

@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import './style.css';
-import { FlightModel } from './physics.js';
+import { FlightModel, wingSpec } from './physics.js';
 import { Controls } from './controls.js';
+import { TouchControls, isTouchDevice } from './touch-controls.js';
 import { Environment } from './environment.js';
 import { Aircraft } from './aircraft.js';
 import { FlightAudio } from './audio.js';
@@ -10,33 +11,45 @@ import { surfaceHeight, wrapAngle } from './math.js';
 
 let stored = {};
 try { stored = JSON.parse(localStorage.getItem('aer-settings') || '{}'); } catch { /* Private browsing can disable storage. */ }
-const settings = { weather: 'breeze', quality: 'high', camera: 0, ...stored };
+const settings = { weather: 'breeze', quality: isTouchDevice() ? 'balanced' : 'high', camera: 0, area: 26, ...stored };
 if (!['calm', 'breeze', 'thermal'].includes(settings.weather)) settings.weather = 'breeze';
-const flight = new FlightModel({ weather: settings.weather });
+settings.area = wingSpec(settings.area).area;
+const flight = new FlightModel({ weather: settings.weather, area: settings.area });
 const audio = new FlightAudio();
 let running = false, started = false, ended = false, accumulator = 0, lastTime = 0, uiTime = 0, world, aircraft, cameraHeading = 0, cameraInitialized = false;
 let renderer, scene, camera, controls;
 
 const ui = new UI({
   start,
+  wing: area => { settings.area = area; flight.setWingArea(area); ui.setWing(area); saveSettings(); },
   resume,
+  pause: togglePause,
   help: () => { pauseForPanel(); ui.help(); },
-  settings: () => { pauseForPanel(); ui.settings(settings.weather, settings.quality, settings.camera); },
-  apply: value => { Object.assign(settings, value); flight.weather = settings.weather; setQuality(); try { localStorage.setItem('aer-settings', JSON.stringify(settings)); } catch { /* Settings are optional. */ } resume(); },
+  settings: () => { pauseForPanel(); ui.settings(settings.weather, settings.quality, settings.camera, settings.area); },
+  apply: value => {
+    const changedWing = value.area !== settings.area;
+    Object.assign(settings, value); flight.weather = settings.weather; setQuality(); saveSettings();
+    if (changedWing) { flight.setWingArea(settings.area); ui.setWing(settings.area); cameraInitialized = false; if (started) { start('air'); return; } }
+    resume();
+  },
   sound: () => { ui.el.sound.textContent = audio.toggle() ? '♪̸' : '♫'; ui.el.sound.setAttribute('aria-pressed', String(audio.muted)); },
-  menu: () => { running = false; started = false; ended = false; controls?.clear(); flight.reset(); cameraInitialized = false; ui.flying(false); ui.el['session-label'].textContent = 'THE VALLEY'; },
+  menu: () => { running = false; started = false; ended = false; controls?.clear(); touch.setEnabled(false); flight.reset(); cameraInitialized = false; ui.flying(false); ui.el['session-label'].textContent = 'THE VALLEY'; },
 });
+const touch = new TouchControls(ui.el['touch-controls']);
+ui.setWing(settings.area);
+function saveSettings() { try { localStorage.setItem('aer-settings', JSON.stringify(settings)); } catch { /* Storage is optional. */ } }
 
 function start(mode = 'air') {
   document.activeElement?.blur();
   controls.clear(); flight.reset(mode); flight.weather = settings.weather;
   started = true; running = true; ended = false; accumulator = 0; cameraInitialized = false;
   ui.flying(true); ui.el['session-label'].textContent = 'FREE FLIGHT';
+  touch.setEnabled(true);
   ui.el['flight-tip'].innerHTML = 'Hold <kbd>SPACE</kbd> to climb. Release to glide. Tap a brake to feel the wing.';
   audio.start().catch(() => { /* Flight remains available if browser audio is blocked. */ });
 }
-function pauseForPanel() { running = false; controls?.clear(); accumulator = 0; }
-function resume() { ui.close(); document.activeElement?.blur(); controls?.clear(); running = started && !ended; accumulator = 0; if (running) audio.start().catch(() => {}); }
+function pauseForPanel() { running = false; controls?.clear(); touch.setEnabled(false); accumulator = 0; }
+function resume() { ui.close(); document.activeElement?.blur(); controls?.clear(); running = started && !ended; touch.setEnabled(running); accumulator = 0; if (running) audio.start().catch(() => {}); }
 function togglePause() { if (!started || ended) return; if (ui.el.panel.open) resume(); else { pauseForPanel(); ui.pause(); } }
 function setQuality() {
   if (!renderer) return;
@@ -62,26 +75,29 @@ function init() {
       if (code === 'KeyM') ui.el.sound.click();
       if (code === 'KeyR' && started) start('air');
       if (code === 'Enter' && !started) start('air');
-    });
+    }, touch);
     window.addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
     document.addEventListener('visibilitychange', () => { if (document.hidden && running) { pauseForPanel(); ui.pause(); } });
     ui.ready(); requestAnimationFrame(frame);
     // Read-only snapshots for integration tests and flight-model inspection.
     window.__AER__ = Object.freeze({ snapshot: () => ({ ...flight.state, running, started, weather: flight.weather, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }), ready: true });
-    if (import.meta.env.DEV && new URLSearchParams(location.search).has('debug')) window.__AER_DEBUG__ = { scene, camera, renderer, flight };
+    if (import.meta.env.DEV && new URLSearchParams(location.search).has('debug')) window.__AER_DEBUG__ = { scene, camera, renderer, flight, aircraft };
   } catch (error) {
     console.error(error); ui.ready(); ui.panel('The sky needs WebGL 2.', '<p class="dialog-intro">The renderer could not start. Use a current desktop browser with hardware acceleration enabled, then reload this page.</p>');
   }
 }
 const cameraPosition = new THREE.Vector3(), target = new THREE.Vector3();
 function updateCamera(s, dt) {
-  const distance = settings.camera === 0 ? 19 : 29;
+  const mobile = touch.active, portrait = camera.aspect < 1;
+  const distance = mobile ? (portrait ? 32 : 25) : settings.camera === 0 ? 19 : 29;
   if (!cameraInitialized) cameraHeading = s.heading;
   cameraHeading += wrapAngle(s.heading - cameraHeading) * (1 - Math.exp(-2.4 * dt));
-  const demoOffset = started ? 0 : -6;
+  const demoOffset = started || mobile ? 0 : -6;
   cameraPosition.set(s.x - Math.sin(cameraHeading) * distance, s.y + (settings.camera === 0 ? 5.2 : 8), s.z + Math.cos(cameraHeading) * distance);
   cameraPosition.y = Math.max(cameraPosition.y, surfaceHeight(cameraPosition.x, cameraPosition.z) + 2.1);
-  target.set(s.x + Math.sin(cameraHeading) * 8 + demoOffset, s.y + 3.0, s.z - Math.cos(cameraHeading) * 8);
+  const wingOffset = mobile ? Math.sin(s.bank) * 2.5 : 0;
+  target.set(s.x + Math.sin(cameraHeading) * 8 + demoOffset + Math.cos(cameraHeading) * wingOffset,
+    s.y + (mobile ? -.8 : 3.0), s.z - Math.cos(cameraHeading) * 8 + Math.sin(cameraHeading) * wingOffset);
   if (!cameraInitialized) camera.position.copy(cameraPosition); else camera.position.lerp(cameraPosition, 1 - Math.exp(-5 * dt));
   // Keep the horizon nearly level; wing and pilot motion supply the pendulum cues.
   camera.up.set(-Math.sin(s.bank) * .025, 1, 0); camera.lookAt(target); cameraInitialized = true;
@@ -96,13 +112,13 @@ function frame(ms) {
       flight.step(1 / 120, input); accumulator -= 1 / 120;
       const s = flight.state;
       if (s.status === 'flying' && world.collision(s)) { s.status = 'crashed'; s.obstacle = true; s.landingImpact = Math.hypot(s.vx, s.vy, s.vz); s.throttle = 0; }
-      if (s.status === 'landed' || s.status === 'crashed') { running = false; ended = true; controls.clear(); ui.finish(s); break; }
+      if (s.status === 'landed' || s.status === 'crashed') { running = false; ended = true; controls.clear(); touch.setEnabled(false); ui.finish(s); break; }
     }
   }
   const s = flight.state;
   const visualState = !started ? { ...s, time: ms * .001, bank: Math.sin(ms * .00022) * .025, leftBrake: .03, rightBrake: .03, throttle: .1 } : s;
   aircraft.update(visualState, running || !started ? dt : 0); world.update(s, s.time); updateCamera(visualState, dt);
-  uiTime += dt; if (uiTime > .1) { ui.update(s, settings.weather); uiTime = 0; }
+  uiTime += dt; if (uiTime > .1) { ui.update(s, settings.weather); touch.update(s); uiTime = 0; }
   audio.update(s, running); renderer.render(scene, camera);
 }
 // Let the loading surface paint before generating local assets.

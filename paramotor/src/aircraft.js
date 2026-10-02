@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { clamp } from './math.js';
+import { clamp, smoothstep } from './math.js';
 
 const v = new THREE.Vector3();
 const material = (color, roughness = .8, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
@@ -15,19 +15,26 @@ export class Aircraft {
   constructor(scene) {
     this.root = new THREE.Group(); scene.add(this.root);
     this.wing = new THREE.Group(); this.root.add(this.wing);
-    this.pilot = new THREE.Group(); this.root.add(this.pilot);
+    this.pilotSwing = new THREE.Group(); this.pilotSwing.name = 'pilot-suspension'; this.root.add(this.pilotSwing);
+    this.pilot = new THREE.Group(); this.pilot.name = 'pilot-harness'; this.pilotSwing.add(this.pilot);
+    this.pilotMatrix = new THREE.Matrix4();
     this.createWing(); this.createPilot(); this.createLines();
   }
   wingPoint(u, t, underside = false, state = null) {
     const edge = Math.abs(u), chord = 2.95 * Math.sqrt(1 - .68 * u * u);
     const x = u * 4.375;
-    const brake = state ? (u < 0 ? state.leftBrake : state.rightBrake) : 0;
+    const brake = state ? Math.min(1.65, u < 0 ? state.leftBrake : state.rightBrake) : 0;
     const cell = Math.sin((u + 1) * .5 * 40 * Math.PI) ** 2;
     const billow = Math.sin(Math.PI * t) ** .7;
     const thickness = (underside ? -.045 : .27 + cell * .045) * billow * (1 - edge * .4);
     const deflection = brake * .48 * Math.max(0, (t - .55) / .45) ** 2 * (.55 + edge * .45);
     const stall = state ? (u < 0 ? state.leftStall : state.rightStall) ?? state.stall : 0;
-    return new THREE.Vector3(x * (1 - stall * edge * .12), 6.8 - 1.9 * edge ** 2.15 + thickness - deflection - stall * edge * .55, (t - .46) * chord + edge ** 2 * .48 + stall * .3 * Math.sin(u * 8 + (state?.time ?? 0) * 3));
+    const collapse = state ? (u < 0 ? state.leftCollapse : state.rightCollapse) ?? 0 : 0;
+    const fold = collapse * (.3 + .7 * smoothstep(.1, .85, edge));
+    const flutter = Math.sin(u * 18 + t * 12 + (state?.time ?? 0) * 9) * .10 * (fold + stall * .3);
+    return new THREE.Vector3(x * (1 - stall * edge * .12 - fold * .62),
+      6.8 - 1.9 * edge ** 2.15 + thickness * (1 - fold) - deflection - stall * edge * .65 - fold * (1.3 + 1.1 * (1 - t)) + flutter,
+      (t - .46) * chord + edge ** 2 * .48 + fold * (1 - t) * 1.6 + stall * .3 * Math.sin(u * 8 + (state?.time ?? 0) * 3)).multiplyScalar(state?.wingScale ?? 1);
   }
   createWing() {
     this.panels = [];
@@ -42,16 +49,16 @@ export class Aircraft {
         const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); g.setIndex(indices); g.computeVertexNormals();
         // Deliberate graphic pattern: charcoal tips, pale outer panels, chartreuse center.
         const mat = cell < 3 || cell > 36 ? charcoal : cell < 8 || cell > 31 ? ivory : lime;
-        const m = mesh(this.wing, g, mat); this.panels.push({ mesh: m, coordinates });
+        const m = mesh(this.wing, g, mat); m.frustumCulled = false; this.panels.push({ mesh: m, coordinates });
       }
     }
     const lines = new Float32Array(41 * 17 * 2 * 3);
     this.seamGeometry = new THREE.BufferGeometry(); this.seamGeometry.setAttribute('position', new THREE.BufferAttribute(lines, 3));
-    this.seams = new THREE.LineSegments(this.seamGeometry, new THREE.LineBasicMaterial({ color: '#657545', transparent: true, opacity: .35 })); this.wing.add(this.seams);
+    this.seams = new THREE.LineSegments(this.seamGeometry, new THREE.LineBasicMaterial({ color: '#657545', transparent: true, opacity: .35 })); this.wing.add(this.seams); this.seams.frustumCulled = false;
     // Brand is a local canvas asset, with no external font or texture dependency.
     const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#243331'; ctx.font = 'bold 92px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('A E R', 256, 98);
     const label = new THREE.Mesh(new THREE.PlaneGeometry(1.6, .4), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true, side: THREE.DoubleSide, depthWrite: false }));
-    label.rotation.x = Math.PI / 2; label.position.set(0, 6.745, .48); this.wing.add(label);
+    label.rotation.x = Math.PI / 2; label.position.set(0, 6.745, .48); this.wing.add(label); this.label = label;
   }
   createPilot() {
     const fabric = material('#273b40'), suit = material('#b46a41'), dark = material('#182329'), metal = material('#a6b1b0', .33, .75), skin = material('#c49a77'), boot = material('#242b2d');
@@ -100,9 +107,15 @@ export class Aircraft {
   }
   update(s, dt) {
     this.root.position.set(s.x, s.y, s.z); this.root.rotation.set(0, -s.heading, 0);
-    this.wing.rotation.set(s.pitch * .35, 0, -s.bank);
-    this.pilot.position.set(s.weight * .16 + Math.sin(s.lateralSwing) * 1.2, 0, -Math.sin(s.swing) * 1.8);
-    this.pilot.rotation.set(-s.swing * .7, 0, -s.bank * .72 - s.weight * .16 + s.lateralSwing);
+    this.wing.rotation.set(s.pitch * .35 + (s.surge ?? 0) * .5, 0, -s.bank);
+    this.pilotSwing.position.set(Math.sin(s.lateralSwing) * .7, 0, -Math.sin(s.swing) * 1.8);
+    this.pilotSwing.rotation.set(-s.swing * .7, 0, -s.bank * .72 + s.lateralSwing);
+    // Pilot-right is +X from this rear camera: load and lower the right riser.
+    // Keep this deliberate lean separate from the inertial harness swing.
+    this.pilot.position.set(s.weight * .23, 0, 0);
+    this.pilot.rotation.set(0, 0, -s.weight * .22);
+    this.label.scale.setScalar(s.wingScale ?? 1); this.label.position.set(0, 6.745, .48).multiplyScalar(s.wingScale ?? 1);
+    this.label.visible = s.stall < .3 && Math.max(s.leftCollapse ?? 0, s.rightCollapse ?? 0) < .2;
     for (const { mesh: m, coordinates } of this.panels) {
       const pos = m.geometry.attributes.position;
       for (let i = 0; i < coordinates.length; i++) { const [u, t, under] = coordinates[i]; const p = this.wingPoint(u, t, under, s); pos.setXYZ(i, p.x, p.y, p.z); }
@@ -115,19 +128,20 @@ export class Aircraft {
     this.seamGeometry.attributes.position.needsUpdate = true;
     this.propeller.rotation.z += s.rpm / 2.68 * Math.PI / 30 * dt; this.propBlur.material.opacity = .03 + s.throttle * .09;
     for (const arm of this.arms) {
-      const brake = arm.side < 0 ? s.leftBrake : s.rightBrake;
+      const brake = Math.min(1.25, arm.side < 0 ? s.leftBrake : s.rightBrake);
       const shoulder = new THREE.Vector3(arm.side * .25, .79, -.02);
       const elbow = new THREE.Vector3(arm.side * .44, .77 - brake * .45, -.06);
       const hand = new THREE.Vector3(arm.side * .43, 1.2 - brake * .95, -.15);
       for (const [m, a, b] of [[arm.upper, shoulder, elbow], [arm.lower, elbow, hand]]) { m.position.copy(a).add(b).multiplyScalar(.5); v.copy(b).sub(a); m.scale.y = v.length(); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.normalize()); }
       arm.hand.position.copy(hand);
     }
-    this.wing.updateMatrix(); this.pilot.updateMatrix();
+    this.wing.updateMatrix(); this.pilotSwing.updateMatrix(); this.pilot.updateMatrix();
+    this.pilotMatrix.multiplyMatrices(this.pilotSwing.matrix, this.pilot.matrix);
     const array = this.lineGeometry.attributes.position.array; let n = 0;
     const segment = (a, b) => { a.toArray(array, n); b.toArray(array, n + 3); n += 6; };
     for (const side of [-1, 1]) for (let row = 0; row < 3; row++) {
-      const attachment = new THREE.Vector3(side * .36, .45, -.07 + row * .075).applyMatrix4(this.pilot.matrix);
-      const riser = new THREE.Vector3(side * .43, 1.65, -.13 + row * .16).applyMatrix4(this.pilot.matrix);
+      const attachment = new THREE.Vector3(side * .36, .45, -.07 + row * .075).applyMatrix4(this.pilotMatrix);
+      const riser = new THREE.Vector3(side * .43, 1.65, -.13 + row * .16).applyMatrix4(this.pilotMatrix);
       segment(attachment, riser);
       for (let branch = 0; branch < 3; branch++) {
         const u = side * (.14 + branch * .29), t = .14 + row * .29;
@@ -137,7 +151,7 @@ export class Aircraft {
       }
     }
     for (const arm of this.arms) {
-      const hand = arm.hand.position.clone().applyMatrix4(this.pilot.matrix);
+      const hand = arm.hand.position.clone().applyMatrix4(this.pilotMatrix);
       const junction = hand.clone().lerp(this.wingPoint(arm.side * .65, 1, true, s).applyMatrix4(this.wing.matrix), .7);
       segment(hand, junction);
       for (let i = 0; i < 6; i++) segment(junction, this.wingPoint(arm.side * (.15 + i * .15), 1, true, s).applyMatrix4(this.wing.matrix));

@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test test/*.test.js",
-    "test:browser": "node scripts/browser-test.mjs"
+    "test:browser": "node scripts/browser-test.mjs",
+    "test:mobile": "node scripts/mobile-test.mjs"
   },
   "dependencies": { "three": "^0.180.0" },
   "devDependencies": { "vite": "^7.1.7", "@playwright/test": "^1.55.1" }

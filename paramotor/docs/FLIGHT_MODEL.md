@@ -26,27 +26,37 @@ T = 735 × throttle^1.55 × clamp(1 − V/48, .25, 1) × ρ/1.225
 acceleration = (lift vector + drag vector + thrust vector) / mass + gravity
 ```
 
-`S = 26 m²` is the flat-area reference, `mass = 115 kg`, and `g = 9.80665 m/s²`. Using a flat rather than projected area is a coefficient convention; changing it without retuning CL/CD would double-count projection.
+`S` is the selected flat area, default 26 m², `mass = 115 kg`, and `g = 9.80665 m/s²`. Using a flat rather than projected area is a coefficient convention; changing it without retuning CL/CD would double-count projection.
 
 Lift is perpendicular to the air-relative flight path, with its vertical component reduced by bank and its lateral component producing the turn. Drag opposes the air-relative velocity. Thrust follows pilot heading and a suspension-related pitch offset. Gravity acts vertically. Velocity and position use semi-implicit integration at 1/120 s.
 
-The attached lift coefficient is `clamp(.24 + 4.8 α + .18 meanBrake, −.35, 1.85)`. Drag is `.042 + .058 CL² + .026 + .09 meanBrake² + .045 |brakeDifference| + .48 stall`. The `.026` term is a lumped pilot, cage and line contribution referred to wing area. These are tunable approximations, not wind-tunnel measurements.
+The attached lift coefficient is `clamp(.24 + 4.8 α + .18 meanBrake, 0, 1.85)`. Each half retains a lift fraction `(1 − .79 sideStall) × (1 − .85 sideCollapse)`; their average scales CL. Drag is `.042 + .058 CLattached² + .026 × 26/S + .09 min(meanBrake,1.4)² + .045 |brakeDifference| + .48 stall + .28 collapse`. The pilot/cage contribution retains its reference drag area as wing size changes. These are tunable approximations, not wind-tunnel measurements.
 
 ## Pitch, brakes and roll
 
-Brake keys demand a pull from zero to full travel. Travel follows a first-order actuator at 2.2 s⁻¹, making approximately 90% travel take one second. Releasing a key raises that hand; Up overrides brake demand to zero. A/F demands full left/right lean, with a smoothed return to center.
+Holding a brake key advances travel continuously at .65 reference travels per second on the 26 m² wing, with no upper input cap. Releasing raises that hand with a 2.2 s⁻¹ actuator response; Up overrides demand to zero. A/F demands left/right lean, with a smoothed return to center. Touch circles support progressive hold, analog downward drag, sideways lean and independent release. Force calculations saturate deformation at 2.5 reference travels and arm animation has finite reach: unbounded commands cannot create unlimited fabric deformation or force. 100% is a reference deep-brake position, not a universal physical stall threshold.
 
 The canopy has a damped pitch mode relative to the airflow. Its trim target is `.09 + .20 meanBrake + .008 throttle` radians. Integrating this relative mode avoids imposing a nonphysical world-attitude clamp during steep descents. Transient lift changes, speed loss and gravity then produce flare/climb/glide behavior. This is a **quasi-steady trim approximation**, not a solved aerodynamic pitching-moment model.
 
-Bank follows a damped second-order response to differential brake, weight shift, torque and asymmetric loss of lift. Differential brake has much greater authority than weight shift; weight steering avoids the explicit brake drag term. Horizontal lift produces turn rate proportional to `L sin(bank)/(mass × horizontalAirspeed)`. Heading includes weathercock alignment and an asymmetric-stall yaw term.
+Bank retains angular momentum with nonlinear restoring and damping forces, without a bank-angle clamp. Differential brake, weight shift, torque and asymmetric loss of lift drive roll. Alternating inputs can build wingovers. A coupled surge oscillator responds to brake, stall and flight-path changes; abrupt release from deep braking can produce low incidence and collapse. Horizontal lift produces turn rate proportional to `L sin(bank)/(mass × horizontalAirspeed)`. Heading includes airflow alignment and asymmetric stall/collapse yaw. These are reduced-order modes, not solved aerodynamic moment equations.
 
 The 6.6 m suspension scale sets a pendulum restoring frequency. Fore/aft swing responds to thrust and acceleration; lateral swing responds to roll. Pilot and canopy move separately on screen. The motor supplies a modest right-turn bias at high power; its sign is an assumed installation choice, not a universal paramotor property.
 
 ## Stall approximation
 
-Each side accumulates stall when its brake exceeds 85% travel, or the model angle of attack becomes excessive. Stall develops over time and decays more slowly after release. It reduces lift/inflation, increases drag, deforms the corresponding canopy half, and adds yaw when asymmetric. Deep symmetric braking eventually produces a steep descent; releasing permits reacceleration with altitude loss.
+Each side accumulates stall through a brake transition near .83–.98 reference travel, or excessive local incidence. A collapse of the opposite half lowers the remaining half's brake stall threshold. Stall develops over time, reduces lift, increases drag, deforms fabric and adds asymmetric yaw. Deep symmetric braking produces a steep descent; release permits reacceleration with altitude loss and possible surge.
 
-Actual flexible-wing stall, spin, surge, cravat, line slack, negative-G unloading and collapse/reinflation are far more complex. These equations are intentionally insufficient for practicing emergency recovery procedures. No random collapse event is added merely to imply realism.
+Independent leading-edge collapse states respond to low incidence, a steep unloaded wingover or A-riser input (Z/X, or mobile A-RISERS mode). Reopening depends on dynamic pressure, positive incidence, released risers and absence of stall. The folded half loses lift and adds drag/yaw; canopy geometry visibly folds. No random collapse timer is used. Line tension is a heuristic proxy, not a solved flexible suspension system. Cravats, line wrapping, reserve deployment, full tumbling and real emergency recovery techniques are not simulated reliably.
+
+## Size range and steering verification
+
+- [Ozone Roadster 4](https://flyozone.com/paramotor/products/gliders/roadster-4) lists 20, 22, 24, 26, 28 and 30 m². [Freeride 2](https://flyozone.com/paramotor/products/gliders/freeride-2) lists nominal sport sizes 14–21, actual flat areas 13.8–20.8 m². [GIN Pegasus 4](https://www.gingliders.com/en/paramotoring/beginner-and-intermediate/pegasus-4/) spans 24.1–31.64 m². The slider covers **14–32 m² in 1 m² steps**, as actual generic area rather than a manufacturer model name.
+- Area changes preserve 115 kg all-up mass and the generic profile/aspect ratio. For `k = sqrt(S/26)`, span, chord and suspension lengths scale by k; pilot and engine remain the same size. Wing loading is 115/S. Lift and drag use selected area; airspeed consequently varies approximately as `sqrt(W/S)`. Roll/pitch/pendulum frequencies scale with `1/sqrt(k)`, and held brake travel advances at `.65/k`, representing constant hand speed on differently sized brake paths. These response scalings are similarity assumptions, not measured handling data. Changing area restarts the flight and persists the selection locally.
+- A calm 60-second run initialized at 1,000 m MSL gives approximately 52.6, 46.5, 42.1, 38.8 and 35.0 km/h for areas 14, 18, 22, 26 and 32 m²; corresponding sink is 2.49, 2.01, 1.70, 1.50 and 1.28 m/s. These are simulator outputs. At equal bank a faster wing need not turn faster; coordinated turn rate still depends on airspeed.
+- [SCOUT's paramotor geometry discussion](https://www.scoutaviation.com/paramotoring/paramotor-knowledge-center/paramotor-geometry/), parts 3 and 14, supports leaning toward the intended turn and explains center-of-gravity/carabinier loading. **Intentional weight right means right turn.** The pilot animation now separates deliberate lean from inertial harness swing instead of reversing the steering sign.
+- [ADVANCE OMEGA ULS maneuver discussion](https://manual.advance.ch/en/omega_uls/1903) supports qualitative low-incidence frontal collapse, tip folding from poor wingover timing and increased stall susceptibility after area loss. Its different wing architecture and collapse-training procedures are not reproduced here.
+
+Mobile devices receive independent captured-pointer brake circles and thrust, a reduced HUD and a camera framing that keeps the pilot and canopy above the controls. Former bright rectangular field overlays were removed. Sparse instanced houses occupy dry, relatively flat terrain with tree clearances and building collision proxies. The marked mown airstrip remains intentionally distinct.
 
 ## Environment and ground interaction
 

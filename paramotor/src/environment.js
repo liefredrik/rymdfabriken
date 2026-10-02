@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
-import { terrainHeight, lakeDistance, LAKE_LEVEL, fbm, noise, random, smoothstep } from './math.js';
+import { terrainHeight, LAKE_LEVEL, fbm, noise, random, smoothstep } from './math.js';
 import { createTerrainGeometry } from './terrain.js';
 
 const temp = new THREE.Object3D();
@@ -23,7 +23,7 @@ export class Environment {
     Object.assign(this.sun.shadow.camera, { left: -65, right: 65, top: 65, bottom: -65, near: 1, far: 450 });
     this.sun.shadow.bias = -.00015; this.sun.shadow.normalBias = .3;
     scene.add(this.sun, this.sun.target);
-    this.createTerrain(quality); this.createWater(); this.createVegetation(quality);
+    this.createTerrain(quality); this.createWater(); this.createScenery(); this.createVegetation(quality);
     this.createAirfield(); this.createClouds(); this.createRoad();
   }
   addObstacle(x, z, radius, height) {
@@ -80,19 +80,6 @@ export class Environment {
         diffuseColor.rgb*=.73+terrainDetail*.55;`);
     };
     const mesh = new THREE.Mesh(geo, mat); mesh.name = 'terrain'; mesh.receiveShadow = true; this.scene.add(mesh);
-    // Cultivated meadow patches follow the same height function as the collision surface.
-    const rng2 = random(336);
-    for (let n = 0; n < 54; n++) {
-      const x = (rng2() - .5) * 2000, z = (rng2() - .5) * 6500;
-      if (lakeDistance(x, z) < 1.25 || Math.hypot(x / 320, (z - 700) / 700) < 1.2) continue;
-      const w = 90 + rng2() * 190, d = 100 + rng2() * 240;
-      const p = new THREE.PlaneGeometry(w, d, 9, 9); p.rotateX(-Math.PI / 2);
-      const a = p.attributes.position;
-      for (let i = 0; i < a.count; i++) { const px = a.getX(i) + x, pz = a.getZ(i) + z; a.setXYZ(i, px, terrainHeight(px, pz) + .45, pz); }
-      p.computeVertexNormals();
-      const m = new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(.16 + rng2() * .07, .2 + rng2() * .15, .25 + rng2() * .13), roughness: 1, map: texture });
-      const patch = new THREE.Mesh(p, m); patch.receiveShadow = true; this.scene.add(patch);
-    }
   }
   createWater() {
     this.water = new THREE.Mesh(new THREE.PlaneGeometry(14000, 14000), new THREE.ShaderMaterial({
@@ -114,7 +101,7 @@ export class Environment {
       const near = i % 3 !== 0;
       const x = (rng() - .5) * (near ? 4500 : 10000), z = (rng() - .5) * (near ? 8000 : 11000), h = terrainHeight(x, z);
       const airport = Math.hypot(x / 330, (z - 700) / 780) < 1.2;
-      if (h < LAKE_LEVEL + 5 || h > 1180 || airport || Math.abs(x - this.roadX(z)) < 15) continue;
+      if (h < LAKE_LEVEL + 5 || h > 1180 || airport || this.houseSites.some(site => Math.hypot(x - site.x, z - site.z) < 27) || Math.abs(x - this.roadX(z)) < 15) continue;
       if (noise(x * .003 + 7, z * .003) < .51) continue;
       const scale = 7 + rng() * 12;
       trees.push({ x, z, h, scale, r: rng() });
@@ -138,6 +125,44 @@ export class Environment {
     for (let i = 0; i < 550; i++) { const x = (rng() - .5) * 9000, z = (rng() - .5) * 9500, h = terrainHeight(x, z); if (h > 180 && h < 1600) rocks.push({ x, z, h, s: 2 + rng() * 10 }); }
     const rock = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 0), new THREE.MeshStandardMaterial({ color: '#85847a', roughness: 1 }), rocks.length);
     rocks.forEach((r, i) => { temp.position.set(r.x, r.h, r.z); temp.rotation.set(r.x, r.z, 0); temp.scale.set(r.s, r.s * .6, r.s * .8); temp.updateMatrix(); rock.setMatrixAt(i, temp.matrix); }); this.scene.add(rock);
+  }
+  createScenery() {
+    // Deterministic, sparse farmsteads. Shared instanced geometry keeps the
+    // added windows, roof overhangs, chimneys and fences inexpensive on phones.
+    const rng = random(6831), boxes = [], roofs = []; this.houseSites = [];
+    const box = (x, y, z, w, h, d, color, angle = 0) => boxes.push({ x, y, z, w, h, d, color, angle });
+    for (let attempt = 0; attempt < 600 && this.houseSites.length < 42; attempt++) {
+      const z = -4200 + rng() * 8300;
+      const x = this.roadX(z) + (rng() < .5 ? -1 : 1) * (35 + rng() * 460);
+      const h = terrainHeight(x, z), samples = [[-12,-12],[-12,12],[12,-12],[12,12]].map(([dx,dz]) => terrainHeight(x+dx,z+dz));
+      if (h < LAKE_LEVEL + 8 || h > 560 || Math.max(...samples) - Math.min(...samples) > 3 || Math.hypot(x / 320, (z - 700) / 720) < 1.25 || this.houseSites.some(site => Math.hypot(site.x-x,site.z-z) < 125)) continue;
+      const base = Math.max(...samples), w = 8 + rng() * 5, d = 9 + rng() * 6, height = 4.6 + rng() * 2.2, angle = rng() < .5 ? 0 : Math.PI / 2;
+      this.houseSites.push({ x, z });
+      const part = (dx,dy,dz,bw,bh,bd,color) => box(x+Math.cos(angle)*dx+Math.sin(angle)*dz,base+dy,z-Math.sin(angle)*dx+Math.cos(angle)*dz,bw,bh,bd,color,angle);
+      part(0, -.7, 0, w+.6, 1.8, d+.6, '#77796c');
+      part(0, height/2, 0, w, height, d, rng()<.5 ? '#b4aa91' : '#c4bb9f');
+      part(0, height-.8, 0, w+.08, 1.3, d+.08, '#655444');
+      roofs.push({ x, y: base+height, z, w:w+1.3, h:2.8, d:d+1.5, color:rng()<.6 ? '#6b5b4d' : '#825e48', angle });
+      part(w*.26,height+2,0,.7,2,.75,'#8b8170');
+      part(0,1.15,-d/2-.06,1.15,2.3,.14,'#4e4335');
+      for (const side of [-1,1]) for (const wx of [-w*.29,w*.29]) {
+        part(wx,2.7,side*(d/2+.06),1.45,1.65,.18,'#e1d4b8');
+        part(wx,2.7,side*(d/2+.17),1.1,1.3,.07,'#354950');
+        part(wx,2.7,side*(d/2+.22),.07,1.3,.06,'#bcb194');
+        part(wx,2.7,side*(d/2+.22),1.1,.07,.06,'#bcb194');
+      }
+      for (let f=0;f<6;f++) { const dx=-13+f*4, dz=14, xx=x+Math.cos(angle)*dx+Math.sin(angle)*dz, zz=z-Math.sin(angle)*dx+Math.cos(angle)*dz, yy=terrainHeight(xx,zz); box(xx,yy+.7,zz,.17,1.4,.17,'#80705b',angle); if(f<5) for(const rail of [.55,1.05]) box(xx+Math.cos(angle)*2,yy+rail,zz-Math.sin(angle)*2,4,.13,.13,'#91816a',angle); }
+      this.addObstacle(x,z,Math.hypot(w,d)/2,height+3+base-h);
+    }
+    const make = (geometry, entries, name) => {
+      const instances = new THREE.InstancedMesh(geometry,new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94}),entries.length);
+      const color = new THREE.Color();
+      entries.forEach((part,i) => { temp.position.set(part.x,part.y,part.z); temp.rotation.set(0,part.angle,0);temp.scale.set(part.w,part.h,part.d);temp.updateMatrix();instances.setMatrixAt(i,temp.matrix);instances.setColorAt(i,color.set(part.color)); });
+      instances.name=name;instances.castShadow=true;instances.receiveShadow=true;this.scene.add(instances);
+    };
+    const section = new THREE.Shape();section.moveTo(-.5,0);section.lineTo(.5,0);section.lineTo(0,1);section.closePath();
+    const roof = new THREE.ExtrudeGeometry(section,{depth:1,bevelEnabled:false,steps:1});roof.translate(0,0,-.5);
+    make(new THREE.BoxGeometry(1,1,1),boxes,'farmstead-details');make(roof,roofs,'farmstead-roofs');
   }
   roadX(z) { return -640 + Math.sin(z * .0014) * 100; }
   createRoad() {

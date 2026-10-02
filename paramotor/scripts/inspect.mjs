@@ -1,0 +1,2 @@
+﻿import { chromium } from '@playwright/test';
+const b=await chromium.launch({channel:'chrome',headless:true});const p=await b.newPage({viewport:{width:1440,height:900}});p.on('pageerror',e=>console.log('ERROR',e.message));p.on('console',m=>{if(m.type()==='error')console.log(m.text())});await p.goto('http://127.0.0.1:5173/?debug');await p.waitForTimeout(3000);console.log(await p.locator('body').innerText());await p.screenshot({path:'test-results/debug.png'});await b.close();
