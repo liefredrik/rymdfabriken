@@ -8,5 +8,9 @@
 /bokcirkel.html    /              301
 /CA.html           /              301
 
+# Paramotor simulator lives in its own folder; keep the site router out of it
+/paramotor          /paramotor/            301
+/paramotor/*        /paramotor/index.html  200
+
 # Single-page app: let the router handle everything else
 /*  /index.html  200

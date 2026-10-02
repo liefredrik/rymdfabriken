@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && npm run build:paramotor",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:paramotor": "npm ci --prefix paramotor && npm run build --prefix paramotor",
+    "test:paramotor": "npm test --prefix paramotor"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

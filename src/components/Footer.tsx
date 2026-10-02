@@ -21,13 +21,23 @@ export function Footer() {
             <ul className="mt-4 space-y-2">
               {nav.map((n) => (
                 <li key={n.to}>
-                  <Link
-                    to={n.to}
-                    className="group inline-flex items-center gap-2 text-sm text-fg/80 transition-colors hover:text-ember-500"
-                  >
-                    <span className="h-px w-3 bg-current opacity-40 transition-all group-hover:w-6 group-hover:opacity-100" />
-                    {n.label}
-                  </Link>
+                  {n.external ? (
+                    <a
+                      href={n.to}
+                      className="group inline-flex items-center gap-2 text-sm text-fg/80 transition-colors hover:text-ember-500"
+                    >
+                      <span className="h-px w-3 bg-current opacity-40 transition-all group-hover:w-6 group-hover:opacity-100" />
+                      {n.label}
+                    </a>
+                  ) : (
+                    <Link
+                      to={n.to}
+                      className="group inline-flex items-center gap-2 text-sm text-fg/80 transition-colors hover:text-ember-500"
+                    >
+                      <span className="h-px w-3 bg-current opacity-40 transition-all group-hover:w-6 group-hover:opacity-100" />
+                      {n.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

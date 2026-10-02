@@ -1,11 +1,15 @@
-export const nav = [
+export type NavItem = { to: string; label: string; eyebrow: string; external?: boolean }
+
+export const nav: readonly NavItem[] = [
   { to: '/', label: 'Fabriken', eyebrow: 'Start' },
   { to: '/universum', label: 'Universum', eyebrow: 'Haiku I–II' },
   { to: '/stjarnor', label: 'Stjärnor', eyebrow: 'Haiku III–VIII' },
   { to: '/livet', label: 'Livet', eyebrow: 'Varelser' },
   { to: '/radioteater', label: 'Radioteater', eyebrow: 'Ljud' },
   { to: '/university', label: 'University', eyebrow: 'Bengt & Lane' },
-] as const
+  // Standalone Three.js app built into dist/paramotor/, so it must be a full page load.
+  { to: '/paramotor/', label: 'Paramotor Simulator', eyebrow: 'Flyg', external: true },
+]
 
 export const manifesto = [
   'Jag har en konstig känsla av att något inte står rätt till.',

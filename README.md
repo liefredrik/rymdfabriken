@@ -44,10 +44,19 @@ public/images/ bilder från den gamla sidan, public/images/bengt/ seriestripparn
 | `/livet`        | Galleri med sex varelser och lightbox                          |
 | `/radioteater`  | SoundCloud-spelare, lyssningstips och FAQ                      |
 | `/university`   | Fotoserien Bengt & Lane i två avsnitt, med helskärmsläsare     |
+| `/paramotor/`   | AER, en fristående Three.js-paramotorsimulator (se `paramotor/README.md`) |
 
 Avdelningarna *springa*, *bokcirkel* och *CA* från den gamla sidan är medvetet utelämnade.
 
+## Paramotorsimulatorn
+
+`paramotor/` är ett eget Vite-projekt med egen `package-lock.json`. Rotens `npm run build` bygger
+först webbplatsen och kör sedan `npm ci` och `vite build` i `paramotor/`, som skriver till
+`dist/paramotor/` med `base: '/paramotor/'`. Länken i menyn är en vanlig `<a href>` eftersom
+simulatorn inte ingår i React-routern. `npm run test:paramotor` kör dess flygmekaniktester.
+
 ## Deploy
 
-Appen är en ren SPA. Vid hosting behöver alla okända sökvägar skrivas om till `index.html`
-(Netlify: `_redirects` med `/* /index.html 200`, Vercel: `rewrites` i `vercel.json`).
+Sajten ligger på Netlify och byggs automatiskt vid push till `main`. `netlify.toml` sätter
+byggkommando, Node-version och cache-headers; `public/_redirects` sköter gamla adresser,
+SPA-fallback och håller routern borta från `/paramotor/`.

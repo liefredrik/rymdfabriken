@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
+import { Menu, Plane, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { nav } from '../data/site'
@@ -37,6 +37,15 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
           <ul className="hidden items-center gap-1 md:flex">
             {nav.map((item) => (
               <li key={item.to}>
+                {item.external ? (
+                  <a
+                    href={item.to}
+                    className="relative inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500"
+                  >
+                    {item.label}
+                    <Plane className="h-3.5 w-3.5 text-ember-500" />
+                  </a>
+                ) : (
                 <NavLink
                   to={item.to}
                   end={item.to === '/'}
@@ -59,6 +68,7 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
                     </>
                   )}
                 </NavLink>
+                )}
               </li>
             ))}
           </ul>
@@ -97,6 +107,15 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
                   exit={{ opacity: 0, x: -24 }}
                   transition={{ delay: 0.05 * i, duration: 0.35, ease: 'easeOut' }}
                 >
+                  {item.external ? (
+                    <a
+                      href={item.to}
+                      className="glass flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-[0.98]"
+                    >
+                      <span className="font-display text-2xl text-ember-500">{item.label}</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-muted">{item.eyebrow}</span>
+                    </a>
+                  ) : (
                   <NavLink
                     to={item.to}
                     end={item.to === '/'}
@@ -109,6 +128,7 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
                     <span className="font-display text-2xl text-ember-500">{item.label}</span>
                     <span className="text-xs uppercase tracking-[0.2em] text-muted">{item.eyebrow}</span>
                   </NavLink>
+                  )}
                 </motion.li>
               ))}
             </ul>
