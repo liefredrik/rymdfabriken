@@ -1,0 +1,12 @@
+# Old one.com page names -> new routes
+/index.html        /              301
+/universum.html    /universum     301
+/haiku.html        /stjarnor      301
+/livet.html        /livet         301
+/radioteater.html  /radioteater   301
+/springa.html      /              301
+/bokcirkel.html    /              301
+/CA.html           /              301
+
+# Single-page app: let the router handle everything else
+/*  /index.html  200
