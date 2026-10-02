@@ -1,0 +1,182 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: 'Frijole', 'Impact', 'Arial Black', sans-serif;
+  --font-serif: 'Fraunces', 'Georgia', serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --color-ember-300: #ffb347;
+  --color-ember-400: #ff9f4a;
+  --color-ember-500: #ff7a26;
+  --color-ember-600: #ee6827;
+  --color-ember-700: #b96119;
+
+  --color-nebula-400: #a67cff;
+  --color-nebula-500: #7a3cff;
+  --color-nebula-700: #4b1d9e;
+  --color-nebula-900: #201e80;
+
+  --color-plasma-400: #6b8cff;
+  --color-plasma-500: #3f6fff;
+
+  --color-void-950: #07050d;
+  --color-void-900: #0d0916;
+  --color-void-800: #15101f;
+  --color-void-700: #231a30;
+
+  --color-paper-50: #fbf7f2;
+  --color-paper-100: #f3ece3;
+  --color-paper-200: #e6dccd;
+
+  --animate-drift: drift 60s ease-in-out infinite alternate;
+  --animate-pulse-slow: pulse-slow 6s ease-in-out infinite;
+  --animate-spin-slow: spin 40s linear infinite;
+
+  @keyframes drift {
+    0% {
+      transform: translate3d(-2%, -1%, 0) scale(1.05) rotate(0deg);
+    }
+    100% {
+      transform: translate3d(2%, 2%, 0) scale(1.15) rotate(3deg);
+    }
+  }
+  @keyframes pulse-slow {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 0.9;
+    }
+  }
+}
+
+:root {
+  --bg: var(--color-paper-50);
+  --bg-elevated: rgba(255, 255, 255, 0.55);
+  --fg: #1a1420;
+  --fg-muted: #5e5468;
+  --line: rgba(26, 20, 32, 0.1);
+  --glow: rgba(238, 104, 39, 0.35);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: var(--color-void-950);
+  --bg-elevated: rgba(255, 255, 255, 0.04);
+  --fg: #f4efe9;
+  --fg-muted: #a79fb3;
+  --line: rgba(255, 255, 255, 0.09);
+  --glow: rgba(255, 122, 38, 0.45);
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--color-ember-500);
+  color: var(--color-void-950);
+}
+
+/* Utility layer */
+@utility text-fg {
+  color: var(--fg);
+}
+@utility text-muted {
+  color: var(--fg-muted);
+}
+@utility bg-surface {
+  background: var(--bg-elevated);
+}
+@utility border-line {
+  border-color: var(--line);
+}
+
+@utility glass {
+  background: var(--bg-elevated);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--line);
+}
+
+@utility glow-ring {
+  box-shadow:
+    0 0 0 1px rgba(255, 122, 38, 0.35),
+    0 0 40px -10px var(--glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+@utility text-ember-gradient {
+  background-image: linear-gradient(
+    110deg,
+    var(--color-ember-300) 0%,
+    var(--color-ember-500) 35%,
+    var(--color-nebula-400) 75%,
+    var(--color-plasma-400) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility text-stroke {
+  -webkit-text-stroke: 1px currentColor;
+  color: transparent;
+}
+
+/* Border glow that follows the cursor (set --mx / --my from JS). */
+@utility spotlight-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.spotlight-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    500px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 122, 38, 0.18),
+    transparent 45%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.spotlight-card:hover::before {
+  opacity: 1;
+}
+
+/* Thin scrollbars in dark mode */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #2d2340;
+  border-radius: 999px;
+  border: 2px solid var(--color-void-950);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
