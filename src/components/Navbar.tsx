@@ -34,13 +34,13 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
         >
           <Logo />
 
-          <ul className="hidden items-center gap-1 md:flex">
+          <ul className="hidden items-center gap-1 xl:flex">
             {nav.map((item) => (
               <li key={item.to}>
                 {item.external ? (
                   <a
                     href={item.to}
-                    className="relative inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500"
+                    className="relative inline-flex items-center gap-1.5 rounded-full px-2.5 py-2 text-xs font-medium text-muted transition-colors hover:text-fg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500"
                   >
                     {item.label}
                     <Plane className="h-3.5 w-3.5 text-ember-500" />
@@ -50,7 +50,7 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
                   to={item.to}
                   end={item.to === '/'}
                   className={({ isActive }) =>
-                    `relative rounded-full px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500 ${
+                    `relative rounded-full px-2.5 py-2 text-xs font-medium transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500 ${
                       isActive ? 'text-fg' : 'text-muted hover:text-fg'
                     }`
                   }
@@ -81,7 +81,7 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
               aria-expanded={open}
               aria-controls="mobile-menu"
               aria-label={open ? 'Stäng meny' : 'Öppna meny'}
-              className="glass inline-flex h-10 w-10 items-center justify-center rounded-full text-fg transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500 md:hidden"
+              className="glass inline-flex h-10 w-10 items-center justify-center rounded-full text-fg transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500 xl:hidden"
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -96,7 +96,7 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 flex flex-col bg-[var(--bg)]/80 px-6 pb-10 pt-28 backdrop-blur-2xl md:hidden"
+            className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-[var(--bg)]/80 px-6 pb-10 pt-28 backdrop-blur-2xl xl:hidden"
           >
             <ul className="flex flex-col gap-2">
               {nav.map((item, i) => (
@@ -110,9 +110,9 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
                   {item.external ? (
                     <a
                       href={item.to}
-                      className="glass flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-[0.98]"
+                      className="glass flex items-center justify-between gap-3 rounded-2xl px-4 py-3 transition-all hover:border-ember-500/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500 active:scale-[0.98]"
                     >
-                      <span className="font-display text-2xl text-ember-500">{item.label}</span>
+                      <span className="font-display text-base text-ember-500 sm:text-xl">{item.label}</span>
                       <span className="text-xs uppercase tracking-[0.2em] text-muted">{item.eyebrow}</span>
                     </a>
                   ) : (
@@ -120,12 +120,12 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
                     to={item.to}
                     end={item.to === '/'}
                     className={({ isActive }) =>
-                      `glass flex items-center justify-between rounded-2xl px-5 py-4 transition-all active:scale-[0.98] ${
+                      `glass flex items-center justify-between gap-3 rounded-2xl px-4 py-3 transition-all hover:border-ember-500/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500 active:scale-[0.98] ${
                         isActive ? 'glow-ring' : ''
                       }`
                     }
                   >
-                    <span className="font-display text-2xl text-ember-500">{item.label}</span>
+                    <span className="font-display text-base text-ember-500 sm:text-xl">{item.label}</span>
                     <span className="text-xs uppercase tracking-[0.2em] text-muted">{item.eyebrow}</span>
                   </NavLink>
                   )}

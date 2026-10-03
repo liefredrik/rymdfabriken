@@ -1,4 +1,5 @@
 import { AnimatePresence } from 'framer-motion'
+import { lazy, Suspense } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { Footer } from './components/Footer'
 import { Navbar } from './components/Navbar'
@@ -14,6 +15,8 @@ import { Radioteater } from './pages/Radioteater'
 import { Stjarnor } from './pages/Stjarnor'
 import { Universum } from './pages/Universum'
 import { University } from './pages/University'
+
+const StarMegaMan = lazy(() => import('./pages/StarMegaMan').then(module => ({ default: module.StarMegaMan })))
 
 export default function App() {
   const { theme, toggle } = useTheme()
@@ -41,6 +44,7 @@ export default function App() {
           <Route path="/livet" element={<Livet />} />
           <Route path="/radioteater" element={<Radioteater />} />
           <Route path="/university" element={<University />} />
+          <Route path="/starmegaman" element={<Suspense fallback={<main className="min-h-screen pt-40 text-center text-muted">Skogen vaknar…</main>}><StarMegaMan /></Suspense>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>

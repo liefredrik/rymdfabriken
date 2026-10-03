@@ -44,6 +44,7 @@ public/images/ bilder från den gamla sidan, public/images/bengt/ seriestripparn
 | `/livet`        | Galleri med sex varelser och lightbox                          |
 | `/radioteater`  | SoundCloud-spelare, lyssningstips och FAQ                      |
 | `/university`   | Fotoserien Bengt & Lane i två avsnitt, med helskärmsläsare     |
+| `/starmegaman`  | StarMegaMan, ett mobilanpassat pixeläventyr i en sovande skog (se `src/games/starmegaman/README.md`) |
 | `/paramotor/`   | AER, en fristående Three.js-paramotorsimulator (se `paramotor/README.md`) |
 
 Avdelningarna *springa*, *bokcirkel* och *CA* från den gamla sidan är medvetet utelämnade.

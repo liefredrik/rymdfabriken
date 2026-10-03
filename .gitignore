@@ -27,3 +27,6 @@ dist-ssr
 paramotor/node_modules
 paramotor/test-results
 paramotor/.work
+
+# Local browser verification artifacts
+.work/
