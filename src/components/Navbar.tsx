@@ -34,7 +34,7 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
         >
           <Logo />
 
-          <ul className="hidden items-center gap-1 xl:flex">
+          <ul className="hidden items-center gap-0 xl:flex">
             {nav.map((item) => (
               <li key={item.to}>
                 {item.external ? (
@@ -96,7 +96,7 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-[var(--bg)]/80 px-6 pb-10 pt-28 backdrop-blur-2xl xl:hidden"
+            className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-[var(--bg)]/95 px-6 pb-10 pt-28 backdrop-blur-2xl xl:hidden"
           >
             <ul className="flex flex-col gap-2">
               {nav.map((item, i) => (

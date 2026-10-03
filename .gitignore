@@ -28,5 +28,6 @@ paramotor/node_modules
 paramotor/test-results
 paramotor/.work
 
-# Local browser verification artifacts
+# Local game verification artifacts
+test-results/
 .work/

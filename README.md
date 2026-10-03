@@ -45,6 +45,7 @@ public/images/ bilder från den gamla sidan, public/images/bengt/ seriestripparn
 | `/radioteater`  | SoundCloud-spelare, lyssningstips och FAQ                      |
 | `/university`   | Fotoserien Bengt & Lane i två avsnitt, med helskärmsläsare     |
 | `/starmegaman`  | StarMegaMan, ett mobilanpassat pixeläventyr i en sovande skog (se `src/games/starmegaman/README.md`) |
+| `/megastar`     | MegaStar: ett mobilanpassat pixeläventyr genom en sovande kvällsskog |
 | `/paramotor/`   | AER, en fristående Three.js-paramotorsimulator (se `paramotor/README.md`) |
 
 Avdelningarna *springa*, *bokcirkel* och *CA* från den gamla sidan är medvetet utelämnade.
@@ -55,6 +56,12 @@ Avdelningarna *springa*, *bokcirkel* och *CA* från den gamla sidan är medvetet
 först webbplatsen och kör sedan `npm ci` och `vite build` i `paramotor/`, som skriver till
 `dist/paramotor/` med `base: '/paramotor/'`. Länken i menyn är en vanlig `<a href>` eftersom
 simulatorn inte ingår i React-routern. `npm run test:paramotor` kör dess flygmekaniktester.
+
+## MegaStar
+
+Spelet ligger isolerat i `src/games/megastar/`; svensk text och kraftnivåer finns i `src/data/megastar.ts`.
+Det laddas vid behov av React-sidan och följer sajtens vanliga bygge. Se [spelets README](src/games/megastar/README.md)
+för kontroller, originalgrafik/ljud, arkitektur och tester. Menylänk och ett startsidekort leder till `/megastar`.
 
 ## Deploy
 

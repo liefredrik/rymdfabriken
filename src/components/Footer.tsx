@@ -24,7 +24,7 @@ export function Footer() {
                   {n.external ? (
                     <a
                       href={n.to}
-                      className="group inline-flex items-center gap-2 text-sm text-fg/80 transition-colors hover:text-ember-500"
+                      className="group inline-flex items-center gap-2 rounded-sm text-sm text-fg/80 transition-colors hover:text-ember-500 active:translate-x-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500"
                     >
                       <span className="h-px w-3 bg-current opacity-40 transition-all group-hover:w-6 group-hover:opacity-100" />
                       {n.label}
@@ -32,7 +32,7 @@ export function Footer() {
                   ) : (
                     <Link
                       to={n.to}
-                      className="group inline-flex items-center gap-2 text-sm text-fg/80 transition-colors hover:text-ember-500"
+                      className="group inline-flex items-center gap-2 rounded-sm text-sm text-fg/80 transition-colors hover:text-ember-500 active:translate-x-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500"
                     >
                       <span className="h-px w-3 bg-current opacity-40 transition-all group-hover:w-6 group-hover:opacity-100" />
                       {n.label}

@@ -8,6 +8,7 @@ export const nav: readonly NavItem[] = [
   { to: '/radioteater', label: 'Radioteater', eyebrow: 'Ljud' },
   { to: '/university', label: 'University', eyebrow: 'Bengt & Lane' },
   { to: '/starmegaman', label: 'StarMegaMan', eyebrow: 'Spela' },
+  { to: '/megastar', label: 'MegaStar', eyebrow: 'Pixeläventyr' },
   // Standalone Three.js app built into dist/paramotor/, so it must be a full page load.
   { to: '/paramotor/', label: 'Paramotor Simulator', eyebrow: 'Flyg', external: true },
 ]

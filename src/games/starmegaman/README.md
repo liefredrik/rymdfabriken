@@ -12,4 +12,6 @@ Use arrows or A/D to move, Space/W/Up to double jump, hold X to shoot, and P/Esc
 
 `node --test tests/starmegaman.test.mjs` runs simulation tests with Node 24's TypeScript support. `npm run build` type-checks and builds the entire website, including the existing paramotor sub-project. Browser verification should cover 390 px portrait, multitouch, desktop keyboard, pause/resume, restart, sound toggle, navigation and theme changes.
 
+With a local Vite server on port 5187, run `node tests/starmegaman-browser.mjs` for desktop/mobile checks and `node tests/starmegaman-journey.mjs` for a complete keyboard-driven run through victory, replay, defeat and restart. These use the existing Playwright installation in `paramotor/node_modules` and Microsoft Edge. Set `STARMEGAMAN_URL` to test another server. Screenshots go to the ignored `test-results/starmegaman/` directory.
+
 Best score is stored only in local storage; unavailable storage or audio does not block gameplay. Reduced-motion preference disables camera shake, comet flight and floating pickups. Essential gameplay animation remains enabled.
