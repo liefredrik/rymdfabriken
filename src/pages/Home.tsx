@@ -166,13 +166,22 @@ function Bento() {
         eyebrow="Avdelningar"
         title={
           <>
-            Fem rum i <span className="text-ember-gradient">fabriken</span>
+            Fler rum i <span className="text-ember-gradient">fabriken</span>
           </>
         }
         lead="Varje rum har sin egen temperatur. Dikterna är kalla och exakta, varelserna varma och obehagliga, radioteatern mitt emellan. Och längst in sitter Bengt och Lane och pluggar."
       />
 
       <div className="mt-14 grid auto-rows-[minmax(180px,auto)] gap-4 md:grid-cols-6">
+        <BentoCard
+          to="/megastar"
+          onMouseMove={spotlight}
+          className="md:col-span-6"
+          icon={<Sparkles className="h-5 w-5" />}
+          eyebrow="Nytt · Rymdfabriken Arcade"
+          title="MegaStar — en liten robot i en mycket stor natt"
+          body="Ett pixeläventyr för mobilen. Samla stjärnljus, hoppa mellan grenarna och möt en mycket bestämd mamma. Skogen sover. Det gör inte du."
+        />
         {/* Universum */}
         <BentoCard
           to="/universum"

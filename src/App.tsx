@@ -14,6 +14,7 @@ import { Radioteater } from './pages/Radioteater'
 import { Stjarnor } from './pages/Stjarnor'
 import { Universum } from './pages/Universum'
 import { University } from './pages/University'
+import { MegaStar } from './pages/MegaStar'
 
 export default function App() {
   const { theme, toggle } = useTheme()
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/livet" element={<Livet />} />
           <Route path="/radioteater" element={<Radioteater />} />
           <Route path="/university" element={<University />} />
+          <Route path="/megastar" element={<MegaStar />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>
