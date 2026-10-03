@@ -15,6 +15,7 @@ import { Radioteater } from './pages/Radioteater'
 import { Stjarnor } from './pages/Stjarnor'
 import { Universum } from './pages/Universum'
 import { University } from './pages/University'
+import { StarChild } from './pages/StarChild'
 import { MegaStar } from './pages/MegaStar'
 
 const StarMegaMan = lazy(() => import('./pages/StarMegaMan').then(module => ({ default: module.StarMegaMan })))
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/radioteater" element={<Radioteater />} />
           <Route path="/university" element={<University />} />
           <Route path="/starmegaman" element={<Suspense fallback={<main className="min-h-screen pt-40 text-center text-muted">Skogen vaknar…</main>}><StarMegaMan /></Suspense>} />
+          <Route path="/starchild" element={<StarChild />} />
           <Route path="/megastar" element={<MegaStar />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

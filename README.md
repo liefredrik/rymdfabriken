@@ -46,6 +46,7 @@ public/images/ bilder från den gamla sidan, public/images/bengt/ seriestripparn
 | `/university`   | Fotoserien Bengt & Lane i två avsnitt, med helskärmsläsare     |
 | `/starmegaman`  | StarMegaMan, ett mobilanpassat pixeläventyr i en sovande skog (se `src/games/starmegaman/README.md`) |
 | `/megastar`     | MegaStar: ett mobilanpassat pixeläventyr genom en sovande kvällsskog |
+| `/starchild`    | StarChild: fånga kometer, hitta månskärvor och möt nattens väktare |
 | `/paramotor/`   | AER, en fristående Three.js-paramotorsimulator (se `paramotor/README.md`) |
 
 Avdelningarna *springa*, *bokcirkel* och *CA* från den gamla sidan är medvetet utelämnade.
@@ -62,6 +63,16 @@ simulatorn inte ingår i React-routern. `npm run test:paramotor` kör dess flygm
 Spelet ligger isolerat i `src/games/megastar/`; svensk text och kraftnivåer finns i `src/data/megastar.ts`.
 Det laddas vid behov av React-sidan och följer sajtens vanliga bygge. Se [spelets README](src/games/megastar/README.md)
 för kontroller, originalgrafik/ljud, arkitektur och tester. Menylänk och ett startsidekort leder till `/megastar`.
+
+## StarChild
+
+Ett eget spelpaket i `src/games/starchild/`, med svensk text i `src/data/starchild.ts`.
+Spelas på `/starchild` med tangentbord eller samtidiga mobiltryck. Fyra kraftnivåer,
+fallande kometer, ljusrusning som reflekterar eldklot, tre gömda månskärvor och en
+boss med två faser. Pixelgrafik och musik skapas lokalt i webbläsaren; spelet hämtar
+inga externa spelresurser. Menyn och startsidan länkar till spelet.
+
+Se [StarChilds README](src/games/starchild/README.md) för arkitektur, kontroller och tester.
 
 ## Deploy
 

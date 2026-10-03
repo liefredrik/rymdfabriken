@@ -1,0 +1,38 @@
+export const starChild = {
+  title: 'StarChild',
+  subtitle: 'När skogen sover faller stjärnorna.',
+  intro: 'Du föll från himlen. Nu vill stjärnorna hem. Ett pixeläventyr genom skogen, strax efter läggdags.',
+  start: 'Fånga natten',
+  hint: 'Följ stjärnorna åt höger. Håll skottknappen. Skogen har sällskap.',
+  defeat: 'Lite för mycket natt.',
+  defeatLead: 'Skogen behåller sina hemligheter. Du får ett nytt försök.',
+  victory: 'En stjärna till morgonen.',
+  victoryLead: 'Auroras glöd har lugnat sig. Lilla Lo vinkar god natt. Du tog med dig en bit av himlen hem.',
+  boss: { name: 'Aurora, nattens väktare', helper: 'Lo · 2 år · chef över bubblorna', intro: '”Bara en stjärna till, sa du.”', shield: 'Los bubbla skyddar mamma. Vänta på öppningen. Rusa genom elden.' },
+  zones: [
+    { name: 'Sömnskogen', short: 'Skogen', start: 0, caption: 'Rävarna drömmer. Rötterna rör sig.', color: '#9bdfbd' },
+    { name: 'Stjärnfallet', short: 'Gläntan', start: 1450, caption: 'Fånga kometerna innan de slocknar.', color: '#c5b4ff' },
+    { name: 'Månporten', short: 'Porten', start: 2950, caption: 'Mamma väntar. Hon har sett klockan.', color: '#ffbb89' },
+  ],
+  powers: [
+    { stars: 0, name: 'Gnista', detail: 'Stjärnskott, dubbelhopp & ljusrusning', color: '#98dff6' },
+    { stars: 8, name: 'Stjärnbärare', detail: 'Starkare skott & stjärnmagnet', color: '#9fe6bf' },
+    { stars: 20, name: 'Komet', detail: 'Dubbelskott & längre räckvidd', color: '#dac1ff' },
+    { stars: 38, name: 'Supernova', detail: 'Tre skott. Betydligt mer glöd.', color: '#ffc97c' },
+  ],
+  controls: [
+    { title: 'Rör dig', text: 'Pilarna eller A / D. På mobilen: håll riktningsknapparna.' },
+    { title: 'Dubbelhoppa', text: 'Mellanslag, W eller ↑. Hoppa igen i luften för att nå grenarna.' },
+    { title: 'Skicka stjärnljus', text: 'Håll X eller skottknappen. Stjärnor gör dig starkare och fyller på ett hjärta vid varje ny kraftnivå.' },
+    { title: 'Rusa genom faran', text: 'Tryck Shift, C eller RUSA. Du är skyddad en kort stund och slår tillbaka eldklot. Kraften laddas om på två sekunder.' },
+    { title: 'Hitta det gömda', text: 'Tre månskärvor väntar bland grenarna. Kometer ger tre stjärnor. De slocknar om du väntar för länge.' },
+    { title: 'Överlev natten', text: 'Fem hjärtan. Eldklot och monster gör ont. Slut på hjärtan betyder en ny resa från början. P pausar.' },
+  ],
+  page: {
+    eyebrow: 'Rymdfabriken Arcade · StarChild',
+    lead: 'Fånga stjärnor. Väx till en supernova. Försök att inte väcka någon.',
+    bentoTitle: 'Himlen tappade något.',
+    bentoBody: 'StarChild. Ett nytt pixeläventyr med stjärnfall, sovande rävar och en mamma som bestämmer när natten är slut.',
+  },
+  relics: ['Skogens minne', 'Kometens hjärta', 'Månens hemlighet'],
+} as const

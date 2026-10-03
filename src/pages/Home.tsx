@@ -1,3 +1,4 @@
+import { starChild } from '../data/starchild'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, BookOpen, GraduationCap, Orbit, Radio, Sparkles, Telescope, RefreshCw } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -190,6 +191,15 @@ function Bento() {
           eyebrow="Nytt · Rymdfabriken Arcade"
           title="MegaStar — en liten robot i en mycket stor natt"
           body="Ett pixeläventyr för mobilen. Samla stjärnljus, hoppa mellan grenarna och möt en mycket bestämd mamma. Skogen sover. Det gör inte du."
+        />
+        <BentoCard
+          to="/starchild"
+          onMouseMove={spotlight}
+          className="md:col-span-6"
+          icon={<Sparkles className="h-5 w-5" />}
+          eyebrow={starChild.page.eyebrow}
+          title={starChild.page.bentoTitle}
+          body={starChild.page.bentoBody}
         />
         {/* Universum */}
         <BentoCard
