@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from 'framer-motion'
-import { Menu, Plane, X } from 'lucide-react'
+import { Gamepad2, Menu, Plane, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { nav } from '../data/site'
@@ -43,7 +43,11 @@ export function Navbar({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
                     className="relative inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500"
                   >
                     {item.label}
-                    <Plane className="h-3.5 w-3.5 text-ember-500" />
+                    {item.icon === 'gamepad' ? (
+                      <Gamepad2 className="h-3.5 w-3.5 text-ember-500" />
+                    ) : (
+                      <Plane className="h-3.5 w-3.5 text-ember-500" />
+                    )}
                   </a>
                 ) : (
                 <NavLink

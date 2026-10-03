@@ -1,4 +1,4 @@
-export type NavItem = { to: string; label: string; eyebrow: string; external?: boolean }
+export type NavItem = { to: string; label: string; eyebrow: string; external?: boolean; icon?: 'plane' | 'gamepad' }
 
 export const nav: readonly NavItem[] = [
   { to: '/', label: 'Fabriken', eyebrow: 'Start' },
@@ -8,7 +8,9 @@ export const nav: readonly NavItem[] = [
   { to: '/radioteater', label: 'Radioteater', eyebrow: 'Ljud' },
   { to: '/university', label: 'University', eyebrow: 'Bengt & Lane' },
   // Standalone Three.js app built into dist/paramotor/, so it must be a full page load.
-  { to: '/paramotor/', label: 'Paramotor Simulator', eyebrow: 'Flyg', external: true },
+  { to: '/paramotor/', label: 'Paramotor Simulator', eyebrow: 'Flyg', external: true, icon: 'plane' },
+  // Pixel game built into dist/megastar/, also outside the router.
+  { to: '/megastar/', label: 'MegaStar', eyebrow: 'Spel', external: true, icon: 'gamepad' },
 ]
 
 export const manifesto = [

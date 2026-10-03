@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { ArrowRight, BookOpen, GraduationCap, Orbit, Radio, Sparkles, Telescope, RefreshCw } from 'lucide-react'
+import { ArrowRight, BookOpen, Gamepad2, GraduationCap, Orbit, Radio, Sparkles, Telescope, RefreshCw } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { allHaiku, stjarnor, universum } from '../data/haiku'
@@ -166,10 +166,10 @@ function Bento() {
         eyebrow="Avdelningar"
         title={
           <>
-            Fem rum i <span className="text-ember-gradient">fabriken</span>
+            Sex rum i <span className="text-ember-gradient">fabriken</span>
           </>
         }
-        lead="Varje rum har sin egen temperatur. Dikterna är kalla och exakta, varelserna varma och obehagliga, radioteatern mitt emellan. Och längst in sitter Bengt och Lane och pluggar."
+        lead="Varje rum har sin egen temperatur. Dikterna är kalla och exakta, varelserna varma och obehagliga, radioteatern mitt emellan. Längst in sitter Bengt och Lane och pluggar, och i källaren står en arkadmaskin."
       />
 
       <div className="mt-14 grid auto-rows-[minmax(180px,auto)] gap-4 md:grid-cols-6">
@@ -272,6 +272,20 @@ function Bento() {
             />
           </div>
         </BentoCard>
+
+        {/* MegaStar */}
+        <BentoCard
+          to="/megastar/"
+          external
+          onMouseMove={spotlight}
+          className="md:col-span-6"
+          icon={<Gamepad2 className="h-5 w-5" />}
+          eyebrow="MegaStar · Spel"
+          title="Fånga stjärnor i en sovande skog"
+          body="Ett pixelspel för mobilen. Du är en liten robot, djuren sover, stjärnorna faller och något gräver sig upp ur marken. Längst in väntar Mamma Rut."
+        >
+          <PixelStars />
+        </BentoCard>
       </div>
     </section>
   )
@@ -279,6 +293,7 @@ function Bento() {
 
 type BentoCardProps = {
   to: string
+  external?: boolean
   className?: string
   icon: React.ReactNode
   eyebrow: string
@@ -288,20 +303,11 @@ type BentoCardProps = {
   onMouseMove: (e: React.MouseEvent<HTMLElement>) => void
 }
 
-function BentoCard({ to, className = '', icon, eyebrow, title, body, children, onMouseMove }: BentoCardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.6, ease }}
-      className={className}
-    >
-      <Link
-        to={to}
-        onMouseMove={onMouseMove}
-        className="spotlight-card glass group relative flex h-full flex-col overflow-hidden rounded-3xl p-7 transition-all duration-300 hover:-translate-y-1 hover:border-ember-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500 active:scale-[0.995]"
-      >
+function BentoCard({ to, external = false, className = '', icon, eyebrow, title, body, children, onMouseMove }: BentoCardProps) {
+  const cardClass =
+    'spotlight-card glass group relative flex h-full flex-col overflow-hidden rounded-3xl p-7 transition-all duration-300 hover:-translate-y-1 hover:border-ember-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500 active:scale-[0.995]'
+  const inner = (
+    <>
         <div className="flex items-center justify-between">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-ember-500/15 text-ember-500 ring-1 ring-ember-500/30 transition-all group-hover:scale-110 group-hover:bg-ember-500 group-hover:text-void-950">
             {icon}
@@ -312,8 +318,44 @@ function BentoCard({ to, className = '', icon, eyebrow, title, body, children, o
         <h3 className="mt-2 font-serif text-2xl text-fg sm:text-3xl">{title}</h3>
         <p className="mt-3 max-w-md leading-relaxed text-muted">{body}</p>
         {children}
-      </Link>
+    </>
+  )
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.6, ease }}
+      className={className}
+    >
+      {external ? (
+        <a href={to} onMouseMove={onMouseMove} className={cardClass}>
+          {inner}
+        </a>
+      ) : (
+        <Link to={to} onMouseMove={onMouseMove} className={cardClass}>
+          {inner}
+        </Link>
+      )}
     </motion.div>
+  )
+}
+
+/* A row of blinking pixel stars, drawn with CSS so the card stays light. */
+function PixelStars() {
+  const stars = [0, 1, 2, 3, 4, 5, 6, 7]
+  return (
+    <div className="mt-6 flex items-end gap-3" aria-hidden="true">
+      {stars.map((i) => (
+        <motion.span
+          key={i}
+          className="block h-3 w-3 bg-ember-500 [clip-path:polygon(50%_0,62%_38%,100%_50%,62%_62%,50%_100%,38%_62%,0_50%,38%_38%)]"
+          animate={{ opacity: [0.3, 1, 0.3], y: [0, -6, 0] }}
+          transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.18, ease: 'easeInOut' }}
+        />
+      ))}
+      <span className="ml-auto font-display text-3xl text-ember-500 transition-transform duration-300 group-hover:scale-110">MegaStar</span>
+    </div>
   )
 }
 

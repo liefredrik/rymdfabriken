@@ -12,5 +12,9 @@
 /paramotor          /paramotor/            301
 /paramotor/*        /paramotor/index.html  200
 
+# MegaStar pixel game, same arrangement
+/megastar           /megastar/             301
+/megastar/*         /megastar/index.html   200
+
 # Single-page app: let the router handle everything else
 /*  /index.html  200

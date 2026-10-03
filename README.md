@@ -45,6 +45,7 @@ public/images/ bilder från den gamla sidan, public/images/bengt/ seriestripparn
 | `/radioteater`  | SoundCloud-spelare, lyssningstips och FAQ                      |
 | `/university`   | Fotoserien Bengt & Lane i två avsnitt, med helskärmsläsare     |
 | `/paramotor/`   | AER, en fristående Three.js-paramotorsimulator (se `paramotor/README.md`) |
+| `/megastar/`    | MegaStar, ett pixelspel för mobilen om att fånga stjärnor (se `megastar/README.md`) |
 
 Avdelningarna *springa*, *bokcirkel* och *CA* från den gamla sidan är medvetet utelämnade.
 
@@ -54,6 +55,13 @@ Avdelningarna *springa*, *bokcirkel* och *CA* från den gamla sidan är medvetet
 först webbplatsen och kör sedan `npm ci` och `vite build` i `paramotor/`, som skriver till
 `dist/paramotor/` med `base: '/paramotor/'`. Länken i menyn är en vanlig `<a href>` eftersom
 simulatorn inte ingår i React-routern. `npm run test:paramotor` kör dess flygmekaniktester.
+
+## MegaStar
+
+`megastar/` är på samma sätt ett eget Vite-projekt (TypeScript, Canvas 2D, Web Audio, inga beroenden
+utöver Vite). Rotens `npm run build` kör `npm ci` och `vite build` där efter simulatorn, vilket skriver
+till `dist/megastar/` med `base: '/megastar/'`. All grafik och allt ljud genereras i koden; det finns
+inga bildfiler. `npm run dev:megastar` startar spelet lokalt på http://127.0.0.1:5174/megastar/.
 
 ## Deploy
 

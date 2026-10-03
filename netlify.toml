@@ -15,3 +15,8 @@
   for = "/paramotor/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/megastar/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
